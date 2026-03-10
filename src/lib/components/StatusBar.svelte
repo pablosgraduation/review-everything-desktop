@@ -153,11 +153,10 @@
     white-space: nowrap;
   }
   .center {
-    flex: 1;
+    flex: 0 1 auto;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    text-align: center;
     margin: 0 16px;
   }
   .right {
