@@ -19,7 +19,7 @@ jobs:
             difft_archive: difft-aarch64-apple-darwin.tar.gz
             difft_binary: difft
             sidecar_name: difft-aarch64-apple-darwin
-          - platform: macos-13
+          - platform: macos-latest
             target: x86_64-apple-darwin
             difft_archive: difft-x86_64-apple-darwin.tar.gz
             difft_binary: difft
