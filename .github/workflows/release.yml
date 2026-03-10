@@ -1,0 +1,101 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            target: aarch64-apple-darwin
+            difft_archive: difft-aarch64-apple-darwin.tar.gz
+            difft_binary: difft
+            sidecar_name: difft-aarch64-apple-darwin
+          - platform: macos-13
+            target: x86_64-apple-darwin
+            difft_archive: difft-x86_64-apple-darwin.tar.gz
+            difft_binary: difft
+            sidecar_name: difft-x86_64-apple-darwin
+          - platform: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            difft_archive: difft-x86_64-unknown-linux-gnu.tar.gz
+            difft_binary: difft
+            sidecar_name: difft-x86_64-unknown-linux-gnu
+          - platform: windows-latest
+            target: x86_64-pc-windows-msvc
+            difft_archive: difft-x86_64-pc-windows-msvc.zip
+            difft_binary: difft.exe
+            sidecar_name: difft-x86_64-pc-windows-msvc.exe
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Get difftastic version
+        id: difft_version
+        shell: bash
+        run: |
+          VERSION=$(curl -sL "https://api.github.com/repos/Wilfred/difftastic/releases/latest" | grep '"tag_name"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Download difftastic (unix)
+        if: matrix.platform != 'windows-latest'
+        shell: bash
+        run: |
+          curl -sL "https://github.com/Wilfred/difftastic/releases/download/${{ steps.difft_version.outputs.version }}/${{ matrix.difft_archive }}" -o /tmp/difft.tar.gz
+          mkdir -p /tmp/difft-extract
+          tar xzf /tmp/difft.tar.gz -C /tmp/difft-extract
+          BINARY=$(find /tmp/difft-extract -name "${{ matrix.difft_binary }}" -type f | head -1)
+          cp "$BINARY" src-tauri/binaries/${{ matrix.sidecar_name }}
+          chmod +x src-tauri/binaries/${{ matrix.sidecar_name }}
+
+      - name: Download difftastic (windows)
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://github.com/Wilfred/difftastic/releases/download/${{ steps.difft_version.outputs.version }}/${{ matrix.difft_archive }}" -OutFile "$env:TEMP\difft.zip"
+          Expand-Archive -Path "$env:TEMP\difft.zip" -DestinationPath "$env:TEMP\difft-extract" -Force
+          $binary = Get-ChildItem -Path "$env:TEMP\difft-extract" -Recurse -Filter "${{ matrix.difft_binary }}" | Select-Object -First 1
+          Copy-Item $binary.FullName -Destination "src-tauri\binaries\${{ matrix.sidecar_name }}"
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "Review Everything ${{ github.ref_name }}"
+          releaseBody: "See the [README](https://github.com/${{ github.repository }}#download) for installation instructions."
+          releaseDraft: true
+          prerelease: false
+          args: --target ${{ matrix.target }}
