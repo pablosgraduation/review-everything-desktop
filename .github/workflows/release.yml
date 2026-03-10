@@ -65,8 +65,11 @@ jobs:
       - name: Get difftastic version
         id: difft_version
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION=$(curl -sL "https://api.github.com/repos/Wilfred/difftastic/releases/latest" | grep '"tag_name"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
+          VERSION=$(gh release view --repo Wilfred/difftastic --json tagName -q .tagName)
+          echo "version=$VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Download difftastic (unix)
