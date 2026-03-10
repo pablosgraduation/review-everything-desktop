@@ -42,6 +42,11 @@
     }
   }
 
+  function truncate(s: string, max: number): string {
+    if (s.length <= max) return s;
+    return s.slice(0, max) + "\u2026";
+  }
+
   let repoName = $derived.by(() => {
     const p = appState.repoPath;
     if (!p) return "";
@@ -90,8 +95,8 @@
       {#if repoName}<span style:color={colors.unchanged}>Repo:</span> {repoName} <span style:color={colors.unchanged}>&middot; File:</span> {/if}{filePos}
     </span>
     <span class="center">
-      <span style:color={colors.unchanged}>Left:</span> <span style:color={colors.fg}>{appState.diffContext.left}</span>
-      <span style:color={colors.unchanged}>&nbsp;&middot;&nbsp;Right:</span> <span style:color={colors.fg}>{appState.diffContext.right}</span>
+      <span style:color={colors.unchanged}>Left:</span> <span style:color={colors.fg} title={appState.diffContext.left}>{truncate(appState.diffContext.left, 40)}</span>
+      <span style:color={colors.unchanged}>&nbsp;&middot;&nbsp;Right:</span> <span style:color={colors.fg} title={appState.diffContext.right}>{truncate(appState.diffContext.right, 40)}</span>
     </span>
     <span class="right">
       {#if reviewInfo}
@@ -148,7 +153,11 @@
     white-space: nowrap;
   }
   .center {
-    flex: 0 0 auto;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
     margin: 0 16px;
   }
   .right {

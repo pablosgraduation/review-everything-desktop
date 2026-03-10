@@ -84,7 +84,7 @@
             <span class="item-subject" style:color={colors.fg}>Ready to commit</span>
           {:else if item.kind === "commit" && item.entry}
             <span class="item-hash" style:color={colors.fgDim} style:font-family={fonts.mono}>{item.entry.short_hash}</span>
-            <span class="item-subject" style:color={isSelected ? colors.white : colors.fg}>{item.entry.subject}</span>
+            <span class="item-subject" style:color={isSelected ? colors.white : colors.fg} title={item.entry.subject}>{item.entry.subject}</span>
             <span class="item-date" style:color={colors.fgDim}>{item.entry.date}</span>
           {/if}
         </div>
@@ -98,6 +98,8 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    min-width: 0;
+    width: 100%;
     font-size: 13px;
   }
   .header {

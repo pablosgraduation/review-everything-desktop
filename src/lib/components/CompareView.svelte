@@ -85,7 +85,7 @@
           <span class="item-subject" style:color={colors.fg}>Ready to commit</span>
         {:else if !item.is_special}
           <span class="item-hash" style:color={colors.fgDim} style:font-family={fonts.mono}>{item.short_hash ?? ""}</span>
-          <span class="item-subject" style:color={isSelected ? colors.white : colors.fg}>{item.subject ?? item.label}</span>
+          <span class="item-subject" style:color={isSelected ? colors.white : colors.fg} title={item.subject ?? item.label}>{item.subject ?? item.label}</span>
           <span class="item-date" style:color={colors.fgDim}>{item.date ?? ""}</span>
         {/if}
       </div>
@@ -98,6 +98,8 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    min-width: 0;
+    width: 100%;
     font-size: 13px;
   }
   .header {
