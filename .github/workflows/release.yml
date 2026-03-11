@@ -62,35 +62,50 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Get difftastic version
-        id: difft_version
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          VERSION=$(gh release view --repo Wilfred/difftastic --json tagName -q .tagName)
-          echo "version=$VERSION"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Download difftastic (unix)
-        if: matrix.platform != 'windows-latest'
+      # TODO: Revert to downloading release binaries once difftastic makes a new
+      # release (>0.67.0) that includes the improvements we need. Replace this
+      # "Build difftastic from source" block with the commented-out block below.
+      - name: Build difftastic from source
         shell: bash
         run: |
-          curl -sL "https://github.com/Wilfred/difftastic/releases/download/${{ steps.difft_version.outputs.version }}/${{ matrix.difft_archive }}" -o /tmp/difft.tar.gz
-          mkdir -p /tmp/difft-extract
-          tar xzf /tmp/difft.tar.gz -C /tmp/difft-extract
-          BINARY=$(find /tmp/difft-extract -name "${{ matrix.difft_binary }}" -type f | head -1)
-          cp "$BINARY" src-tauri/binaries/${{ matrix.sidecar_name }}
-          chmod +x src-tauri/binaries/${{ matrix.sidecar_name }}
+          git clone https://github.com/Wilfred/difftastic.git /tmp/difftastic
+          cd /tmp/difftastic
+          git checkout d7dcb61f7
+          cargo build --release --target ${{ matrix.target }}
+          BINARY="/tmp/difftastic/target/${{ matrix.target }}/release/${{ matrix.difft_binary }}"
+          cp "$BINARY" "$GITHUB_WORKSPACE/src-tauri/binaries/${{ matrix.sidecar_name }}"
+          chmod +x "$GITHUB_WORKSPACE/src-tauri/binaries/${{ matrix.sidecar_name }}"
 
-      - name: Download difftastic (windows)
-        if: matrix.platform == 'windows-latest'
-        shell: pwsh
-        run: |
-          Invoke-WebRequest -Uri "https://github.com/Wilfred/difftastic/releases/download/${{ steps.difft_version.outputs.version }}/${{ matrix.difft_archive }}" -OutFile "$env:TEMP\difft.zip"
-          Expand-Archive -Path "$env:TEMP\difft.zip" -DestinationPath "$env:TEMP\difft-extract" -Force
-          $binary = Get-ChildItem -Path "$env:TEMP\difft-extract" -Recurse -Filter "${{ matrix.difft_binary }}" | Select-Object -First 1
-          Copy-Item $binary.FullName -Destination "src-tauri\binaries\${{ matrix.sidecar_name }}"
+      # --- Download difftastic from releases (uncomment to restore) ---
+      # - name: Get difftastic version
+      #   id: difft_version
+      #   shell: bash
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     VERSION=$(gh release view --repo Wilfred/difftastic --json tagName -q .tagName)
+      #     echo "version=$VERSION"
+      #     echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      #
+      # - name: Download difftastic (unix)
+      #   if: matrix.platform != 'windows-latest'
+      #   shell: bash
+      #   run: |
+      #     curl -sL "https://github.com/Wilfred/difftastic/releases/download/${{ steps.difft_version.outputs.version }}/${{ matrix.difft_archive }}" -o /tmp/difft.tar.gz
+      #     mkdir -p /tmp/difft-extract
+      #     tar xzf /tmp/difft.tar.gz -C /tmp/difft-extract
+      #     BINARY=$(find /tmp/difft-extract -name "${{ matrix.difft_binary }}" -type f | head -1)
+      #     cp "$BINARY" src-tauri/binaries/${{ matrix.sidecar_name }}
+      #     chmod +x src-tauri/binaries/${{ matrix.sidecar_name }}
+      #
+      # - name: Download difftastic (windows)
+      #   if: matrix.platform == 'windows-latest'
+      #   shell: pwsh
+      #   run: |
+      #     Invoke-WebRequest -Uri "https://github.com/Wilfred/difftastic/releases/download/${{ steps.difft_version.outputs.version }}/${{ matrix.difft_archive }}" -OutFile "$env:TEMP\difft.zip"
+      #     Expand-Archive -Path "$env:TEMP\difft.zip" -DestinationPath "$env:TEMP\difft-extract" -Force
+      #     $binary = Get-ChildItem -Path "$env:TEMP\difft-extract" -Recurse -Filter "${{ matrix.difft_binary }}" | Select-Object -First 1
+      #     Copy-Item $binary.FullName -Destination "src-tauri\binaries\${{ matrix.sidecar_name }}"
 
       - uses: tauri-apps/tauri-action@v0
         env:
