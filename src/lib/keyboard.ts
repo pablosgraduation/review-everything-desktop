@@ -18,6 +18,7 @@ import {
   prevDiffFindMatch,
   showWelcome,
 } from "$lib/stores/app.svelte";
+import { isModKey } from "$lib/platform";
 import type { TreeNode } from "$lib/types";
 
 function viewport() {
@@ -108,7 +109,7 @@ export function handleKeydown(e: KeyboardEvent) {
 
 function handleLogKey(e: KeyboardEvent) {
   // Ctrl+r: refresh log
-  if (e.ctrlKey && e.key === "r") {
+  if (isModKey(e) && e.key === "r") {
     loadLog();
     e.preventDefault();
     return;
@@ -118,7 +119,7 @@ function handleLogKey(e: KeyboardEvent) {
 
   if (e.key === "ArrowDown" || e.key === "ArrowUp") {
     const down = e.key === "ArrowDown";
-    if (e.ctrlKey) {
+    if (isModKey(e)) {
       appState.logCursor = down ? Math.max(0, count - 1) : 0;
       if (!down) appState.logScroll = 0;
       e.preventDefault();
@@ -152,13 +153,13 @@ function handleLogKey(e: KeyboardEvent) {
       e.preventDefault();
       break;
     case "d":
-      if (e.ctrlKey) {
+      if (isModKey(e)) {
         moveCursorLog(15, count);
         e.preventDefault();
       }
       break;
     case "u":
-      if (e.ctrlKey) {
+      if (isModKey(e)) {
         moveCursorLog(-15, count);
         e.preventDefault();
       }
@@ -209,7 +210,7 @@ function handleCompareKey(e: KeyboardEvent) {
 
   if (e.key === "ArrowDown" || e.key === "ArrowUp") {
     const down = e.key === "ArrowDown";
-    if (e.ctrlKey) {
+    if (isModKey(e)) {
       appState.compareCursor = down ? Math.max(0, count - 1) : 0;
       if (!down) appState.compareScroll = 0;
       e.preventDefault();
@@ -293,7 +294,7 @@ function handleDiffKey(e: KeyboardEvent) {
   }
 
   // Ctrl+F: open find, or refocus if already open
-  if (e.ctrlKey && e.key === "f") {
+  if (isModKey(e) && e.key === "f") {
     if (appState.diffFindActive) {
       const input = document.querySelector('.find-bar input') as HTMLInputElement | null;
       input?.focus();
@@ -307,13 +308,13 @@ function handleDiffKey(e: KeyboardEvent) {
   // Handle arrow keys with modifiers first
   if (e.key === "ArrowDown" || e.key === "ArrowUp") {
     const down = e.key === "ArrowDown";
-    if (e.ctrlKey && e.shiftKey) {
+    if (isModKey(e) && e.shiftKey) {
       // Ctrl+Shift+Arrow: next/prev hunk
       if (down) nextHunk(); else prevHunk();
       e.preventDefault();
       return;
     }
-    if (e.ctrlKey) {
+    if (isModKey(e)) {
       // Ctrl+Arrow: scroll to top/bottom
       if (down) {
         appState.diffCursor = Math.max(0, totalRows - 1);
@@ -337,7 +338,7 @@ function handleDiffKey(e: KeyboardEvent) {
 
   if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
     const right = e.key === "ArrowRight";
-    if (e.ctrlKey) {
+    if (isModKey(e)) {
       // Ctrl+Left/Right: beginning/end of line
       appState.hScroll = right ? 200 : 0;
       e.preventDefault();
@@ -353,7 +354,7 @@ function handleDiffKey(e: KeyboardEvent) {
   }
 
   // Ctrl+r: refresh diff
-  if (e.ctrlKey && e.key === "r") {
+  if (isModKey(e) && e.key === "r") {
     import("$lib/stores/app.svelte").then((m) => m.refreshDiff());
     e.preventDefault();
     return;
@@ -393,14 +394,14 @@ function handleDiffKey(e: KeyboardEvent) {
       e.preventDefault();
       break;
     case "d":
-      if (e.ctrlKey) {
+      if (isModKey(e)) {
         appState.diffCursor = Math.min(totalRows - 1, appState.diffCursor + Math.floor(viewport() / 2));
         ensureDiffCursorVisible(viewport());
         e.preventDefault();
       }
       break;
     case "u":
-      if (e.ctrlKey) {
+      if (isModKey(e)) {
         appState.diffCursor = Math.max(0, appState.diffCursor - Math.floor(viewport() / 2));
         ensureDiffCursorVisible(viewport());
         e.preventDefault();
@@ -473,14 +474,14 @@ function handleTreeKey(e: KeyboardEvent) {
   const flatCount = countFlatNodes(appState.treeNodes);
 
   // Ctrl+r: refresh diff
-  if (e.ctrlKey && e.key === "r") {
+  if (isModKey(e) && e.key === "r") {
     import("$lib/stores/app.svelte").then((m) => m.refreshDiff());
     e.preventDefault();
     return;
   }
 
   // Ctrl+F: open find, or refocus if already open
-  if (e.ctrlKey && e.key === "f") {
+  if (isModKey(e) && e.key === "f") {
     if (appState.diffFindActive) {
       const input = document.querySelector('.find-bar input') as HTMLInputElement | null;
       input?.focus();
@@ -494,7 +495,7 @@ function handleTreeKey(e: KeyboardEvent) {
   // Handle arrow keys with modifiers
   if (e.key === "ArrowDown" || e.key === "ArrowUp") {
     const down = e.key === "ArrowDown";
-    if (e.ctrlKey) {
+    if (isModKey(e)) {
       appState.treeCursor = down ? Math.max(0, flatCount - 1) : 0;
       if (!down) appState.treeScroll = 0;
       e.preventDefault();
@@ -529,13 +530,13 @@ function handleTreeKey(e: KeyboardEvent) {
       e.preventDefault();
       break;
     case "d":
-      if (e.ctrlKey) {
+      if (isModKey(e)) {
         appState.treeCursor = Math.min(flatCount - 1, appState.treeCursor + 15);
         e.preventDefault();
       }
       break;
     case "u":
-      if (e.ctrlKey) {
+      if (isModKey(e)) {
         appState.treeCursor = Math.max(0, appState.treeCursor - 15);
         e.preventDefault();
       }

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { appState, goToFile, goToNextFileInTree, goToPrevFileInTree, treeFileOrder, toggleReviewed, clearReviews, exitDiff, refreshDiff, openDiffFind, closeDiffFind } from "$lib/stores/app.svelte";
   import { colors, fonts, statusColor } from "$lib/theme";
+  import { modLabel } from "$lib/platform";
   import type { TreeNode } from "$lib/types";
 
   interface FlatNode {
@@ -258,7 +259,7 @@
         class="tb-btn"
         style:color={appState.diffFindActive ? colors.fg : colors.fgDim}
         onclick={() => appState.diffFindActive ? closeDiffFind() : openDiffFind()}
-        title="Find in file (Ctrl+F)"
+        title="Find in file ({modLabel}+F)"
       >/</span>
       <span class="tb-sep" style:background={colors.border}></span>
       <span

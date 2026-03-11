@@ -26,7 +26,7 @@ fn process_created(file: DifftFile, new_lines: Vec<String>, stats: Option<(u32, 
         .into_iter()
         .map(|line| Row {
             left: Side::filler(),
-            right: Side::new(line, false, Highlights::new()),
+            right: Side::with_full_highlight(line),
         })
         .collect();
 
@@ -336,6 +336,7 @@ mod tests {
         assert_eq!(result.rows.len(), 2);
         assert!(result.rows[0].left.is_filler);
         assert_eq!(result.rows[0].right.content, "a");
+        assert!(!result.rows[0].right.highlights.is_empty());
         assert_eq!(result.additions, 2);
     }
 

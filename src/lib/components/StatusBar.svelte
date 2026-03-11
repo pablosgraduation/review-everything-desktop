@@ -1,6 +1,7 @@
 <script lang="ts">
   import { appState, startCompare, treeFileOrder, loadLog, shortenPath } from "$lib/stores/app.svelte";
   import { colors, fonts } from "$lib/theme";
+  import { modLabel } from "$lib/platform";
 
   let repoDisplay = $derived.by(() => {
     const p = appState.repoPath;
@@ -122,7 +123,7 @@
       <span> &middot; </span>
       <span class="hint-link" onclick={() => startCompare()}>c compare</span>
       <span> &middot; </span>
-      <span class="hint-link" onclick={() => loadLog()}>ctrl+r refresh</span>
+      <span class="hint-link" onclick={() => loadLog()}>{modLabel.toLowerCase()}+r refresh</span>
       <span> &middot; </span>
       <span class="hint-link" onclick={openSearch}>/ search</span>
     </span>

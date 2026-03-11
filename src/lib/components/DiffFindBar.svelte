@@ -1,6 +1,7 @@
 <script lang="ts">
   import { appState, closeDiffFind, nextDiffFindMatch, prevDiffFindMatch, jumpToNearestDiffFindMatch } from "$lib/stores/app.svelte";
   import { colors, fonts } from "$lib/theme";
+  import { isModKey, modLabel } from "$lib/platform";
 
   let inputEl = $state<HTMLInputElement | null>(null);
 
@@ -30,13 +31,13 @@
     } else if (e.key === "Tab") {
       inputEl?.blur();
       e.preventDefault();
-    } else if (e.ctrlKey && e.key === "f") {
+    } else if (isModKey(e) && e.key === "f") {
       closeDiffFind();
       e.preventDefault();
-    } else if (e.ctrlKey && e.code === "KeyO") {
+    } else if (isModKey(e) && e.code === "KeyO") {
       toggleOld();
       e.preventDefault();
-    } else if (e.ctrlKey && e.code === "KeyN") {
+    } else if (isModKey(e) && e.code === "KeyN") {
       toggleNew();
       e.preventDefault();
     }
@@ -85,7 +86,7 @@
         style:color={appState.diffFindSearchOld ? colors.fg : colors.fgDim}
         style:background={appState.diffFindSearchOld ? "rgba(255,255,255,0.08)" : "transparent"}
         onclick={toggleOld}
-        title="Ctrl+O"
+        title="{modLabel}+O"
       ><u>O</u>ld</span>
       <span
         class="scope-btn"
@@ -93,7 +94,7 @@
         style:color={appState.diffFindSearchNew ? colors.fg : colors.fgDim}
         style:background={appState.diffFindSearchNew ? "rgba(255,255,255,0.08)" : "transparent"}
         onclick={toggleNew}
-        title="Ctrl+N"
+        title="{modLabel}+N"
       ><u>N</u>ew</span>
     </span>
     {#if matchInfo}

@@ -4,6 +4,7 @@
   import DiffScrollbar from "./DiffScrollbar.svelte";
   import { appState, goToNextFileInTree, goToPrevFileInTree, treeFileOrder, toggleReviewed, clearReviews, openDiffFind, closeDiffFind } from "$lib/stores/app.svelte";
   import { colors } from "$lib/theme";
+  import { modLabel } from "$lib/platform";
 
   let order = $derived(treeFileOrder());
   let treePos = $derived(order.indexOf(appState.currentFileIdx));
@@ -53,7 +54,7 @@
         class="nav-btn"
         style:color={appState.diffFindActive ? colors.fg : colors.fgDim}
         onclick={() => appState.diffFindActive ? closeDiffFind() : openDiffFind()}
-        title="Find in file (Ctrl+F)"
+        title="Find in file ({modLabel}+F)"
       >/</span>
     </span>
     <span class="file-path">{title}</span>

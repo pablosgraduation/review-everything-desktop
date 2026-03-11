@@ -3,6 +3,7 @@
   import { appState, openRepo, showWelcome, shortenPath, goHome } from "$lib/stores/app.svelte";
   import * as ipc from "$lib/ipc";
   import { colors, fonts } from "$lib/theme";
+  import { isMac } from "$lib/platform";
   import { getCurrentWindow } from "@tauri-apps/api/window";
 
   let inputEl = $state<HTMLInputElement | null>(null);
@@ -264,7 +265,7 @@
   });
 </script>
 
-<div class="top-bar" style:font-family={fonts.ui} bind:this={wrapperEl} onmousedown={handleDrag}>
+<div class="top-bar" style:font-family={fonts.ui} style:padding-left={isMac ? "80px" : "12px"} style:padding-right={isMac ? "80px" : "12px"} bind:this={wrapperEl} onmousedown={handleDrag}>
   {#if showHomeButton}
     <button
       class="home-btn"

@@ -2,19 +2,22 @@
   import { appState } from "$lib/stores/app.svelte";
   import { viewBeforeHelp } from "$lib/keyboard";
   import { colors, fonts } from "$lib/theme";
+  import { modLabel } from "$lib/platform";
+
+  const mod = modLabel;
 
   const shortcuts = [
     ["Navigation", ""],
     ["j / k", "Scroll down / up"],
     ["↑ / ↓", "Scroll down / up"],
     ["Shift+↑ / ↓", "Scroll 5 lines"],
-    ["Ctrl+↑ / ↓", "Go to top / bottom"],
-    ["Ctrl+Shift+↑ / ↓", "Next / previous hunk"],
+    [`${mod}+↑ / ↓`, "Go to top / bottom"],
+    [`${mod}+Shift+↑ / ↓`, "Next / previous hunk"],
     ["h / l", "Scroll left / right"],
     ["Shift+← / →", "Scroll 5 chars"],
-    ["Ctrl+← / →", "Beginning / end of line"],
+    [`${mod}+← / →`, "Beginning / end of line"],
     ["g / G", "Go to top / bottom"],
-    ["Ctrl+d / u", "Half page down / up"],
+    [`${mod}+d / u`, "Half page down / up"],
     ["n / N", "Next / previous hunk"],
     ["] / [", "Next / previous file"],
     ["", ""],
@@ -31,7 +34,7 @@
     ["/", "Search"],
     ["c", "Compare mode"],
     ["o", "Focus repo bar"],
-    ["Ctrl+r", "Refresh log"],
+    [`${mod}+r`, "Refresh log"],
     ["Enter", "Select commit"],
   ];
 </script>
