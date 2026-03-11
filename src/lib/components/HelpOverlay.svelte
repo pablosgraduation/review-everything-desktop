@@ -30,7 +30,7 @@
     ["Log / Compare", ""],
     ["/", "Search"],
     ["c", "Compare mode"],
-    ["o", "Open / switch repository"],
+    ["o", "Focus repo bar"],
     ["Ctrl+r", "Refresh log"],
     ["Enter", "Select commit"],
   ];

@@ -16,8 +16,7 @@ import {
   closeDiffFind,
   nextDiffFindMatch,
   prevDiffFindMatch,
-  openRepo,
-  showRepoPicker,
+  showWelcome,
 } from "$lib/stores/app.svelte";
 import type { TreeNode } from "$lib/types";
 
@@ -32,6 +31,9 @@ export function setViewBeforeHelp(v: string) {
 }
 
 export function handleKeydown(e: KeyboardEvent) {
+  // Top bar input handles its own keys
+  if (appState.topBarFocused) return;
+
   // Search mode is handled by the SearchOverlay component
   if (appState.searchActive) return;
 
@@ -46,19 +48,30 @@ export function handleKeydown(e: KeyboardEvent) {
     return;
   }
 
-  // Repo picker view
-  if (view === "repo-picker") {
-    handleRepoPickerKey(e);
+  // Welcome view
+  if (view === "welcome") {
+    if (e.key === "o") {
+      window.dispatchEvent(new Event("re:focus-top-bar"));
+      e.preventDefault();
+    } else if (e.key === "?") {
+      viewBeforeHelp = appState.view;
+      appState.view = "help";
+      e.preventDefault();
+    }
     return;
   }
 
   // Error view
   if (view === "error") {
     if (e.key === "Escape" || e.key === "q") {
-      if (appState.viewBeforeError === "repo-picker") {
-        showRepoPicker();
-      } else {
+      const target = appState.viewBeforeError;
+      if (target === "welcome" || !appState.repoPath) {
+        showWelcome();
+      } else if (target === "log") {
         loadLog();
+      } else {
+        // Return to previous view (diff, compare, etc.) — data is intact
+        appState.view = target;
       }
       e.preventDefault();
     }
@@ -67,14 +80,7 @@ export function handleKeydown(e: KeyboardEvent) {
 
   // Loading view
   if (view === "loading") {
-    if (e.key === "Escape") {
-      if (appState.repoPath) {
-        loadLog();
-      } else {
-        showRepoPicker();
-      }
-      e.preventDefault();
-    }
+    // No-op during loading (let async operation complete)
     return;
   }
 
@@ -177,7 +183,7 @@ function handleLogKey(e: KeyboardEvent) {
       // Can't quit a desktop app easily, do nothing
       break;
     case "o":
-      showRepoPicker();
+      window.dispatchEvent(new Event("re:focus-top-bar"));
       e.preventDefault();
       break;
     case "?":
@@ -446,6 +452,10 @@ function handleDiffKey(e: KeyboardEvent) {
       openDiffFind();
       e.preventDefault();
       break;
+    case "o":
+      window.dispatchEvent(new Event("re:focus-top-bar"));
+      e.preventDefault();
+      break;
     case "Escape":
     case "q":
       exitDiff();
@@ -656,46 +666,3 @@ function prevHunk() {
   }
 }
 
-function handleRepoPickerKey(e: KeyboardEvent) {
-  // Don't intercept keys when the path input is focused
-  if ((e.target as HTMLElement)?.tagName === "INPUT") return;
-
-  const count = appState.recentRepos.length;
-
-  switch (e.key) {
-    case "j":
-    case "ArrowDown":
-      if (count > 0) {
-        appState.repoPickerCursor = Math.min(count - 1, appState.repoPickerCursor + 1);
-      }
-      e.preventDefault();
-      break;
-    case "k":
-    case "ArrowUp":
-      appState.repoPickerCursor = Math.max(0, appState.repoPickerCursor - 1);
-      e.preventDefault();
-      break;
-    case "Enter":
-      if (count > 0) {
-        const path = appState.recentRepos[appState.repoPickerCursor];
-        if (path) openRepo(path);
-      }
-      e.preventDefault();
-      break;
-    case "o":
-    case " ":
-      // Trigger folder picker — dispatched via custom event to the component
-      window.dispatchEvent(new CustomEvent("re:open-folder"));
-      e.preventDefault();
-      break;
-    case "/":
-      window.dispatchEvent(new CustomEvent("re:focus-path-input"));
-      e.preventDefault();
-      break;
-    case "?":
-      viewBeforeHelp = appState.view;
-      appState.view = "help";
-      e.preventDefault();
-      break;
-  }
-}

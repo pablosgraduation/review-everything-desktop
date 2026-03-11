@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { appState, openRepo, showRepoPicker } from "$lib/stores/app.svelte";
+  import { appState, openRepo, showWelcome } from "$lib/stores/app.svelte";
   import * as ipc from "$lib/ipc";
   import { handleKeydown } from "$lib/keyboard";
   import { colors, fonts } from "$lib/theme";
-  import RepoPickerView from "$lib/components/RepoPickerView.svelte";
+  import TopBar from "$lib/components/TopBar.svelte";
   import LogView from "$lib/components/LogView.svelte";
   import CompareView from "$lib/components/CompareView.svelte";
   import DiffView from "$lib/components/DiffView.svelte";
@@ -28,13 +28,13 @@
           try {
             await openRepo(cfg.last_repo);
           } catch {
-            showRepoPicker();
+            showWelcome();
           }
         } else {
-          showRepoPicker();
+          showWelcome();
         }
       } catch {
-        showRepoPicker();
+        showWelcome();
       }
     })();
 
@@ -43,9 +43,13 @@
 </script>
 
 <div class="app" style:background={colors.bg} style:color={colors.fg} style:font-family={fonts.ui}>
+  <TopBar />
   <div class="main-area">
-    {#if appState.view === "repo-picker"}
-      <RepoPickerView />
+    {#if appState.view === "welcome"}
+      <div class="center-message">
+        <div style:color={colors.fg} style:font-size="16px" style:font-weight="600">Review Everything</div>
+        <div style:color={colors.unchanged} style:margin-top="12px" style:font-size="13px">Open a repository to get started</div>
+      </div>
     {:else if appState.view === "log"}
       <LogView />
     {:else if appState.view === "compare-new" || appState.view === "compare-old"}

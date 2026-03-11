@@ -10,7 +10,7 @@ import type {
 import * as ipc from "$lib/ipc";
 
 export type ViewKind =
-  | "repo-picker"
+  | "welcome"
   | "log"
   | "diff"
   | "compare-new"
@@ -20,16 +20,18 @@ export type ViewKind =
   | "help";
 
 // --- App state ---
-let view = $state<ViewKind>("repo-picker");
+let view = $state<ViewKind>("welcome");
 let errorMessage = $state("");
-let viewBeforeError = $state<ViewKind>("repo-picker");
+let viewBeforeError = $state<ViewKind>("welcome");
 let loadingMessage = $state("");
 
 // Repo
 let homeDir = $state("");
 let repoPath = $state("");
 let recentRepos = $state<string[]>([]);
-let repoPickerCursor = $state(0);
+
+// Top bar
+let topBarFocused = $state(false);
 
 // Log
 let logItems = $state<LogItem[]>([]);
@@ -136,8 +138,10 @@ export const appState = {
   set repoPath(v: string) { repoPath = v; },
   get recentRepos() { return recentRepos; },
   set recentRepos(v: string[]) { recentRepos = v; },
-  get repoPickerCursor() { return repoPickerCursor; },
-  set repoPickerCursor(v: number) { repoPickerCursor = v; },
+
+  // Top bar
+  get topBarFocused() { return topBarFocused; },
+  set topBarFocused(v: boolean) { topBarFocused = v; },
 
   // Log
   get logItems() { return logItems; },
@@ -409,36 +413,67 @@ function resetAllState() {
 }
 
 export async function openRepo(path: string) {
+  // Same repo — no-op (don't destroy current session)
+  if (path === repoPath) {
+    topBarFocused = false;
+    return;
+  }
+
+  const previousPath = repoPath;
+  const previousView = view;
+
+  loadingMessage = "Opening repository...";
+  view = "loading";
+
   try {
+    // 1. Change backend CWD
     const canonical = await ipc.setRepo(path);
-    repoPath = canonical;
-    resetAllState();
-    // Call preflight + log directly (not via loadLog) so errors
-    // propagate to our catch, which sets viewBeforeError = "repo-picker".
-    // If loadLog's own catch ran instead, it would set viewBeforeError = "log"
-    // and trap the user in an error → retry loop with no way back to picker.
+    // 2. Verify
     await ipc.preflightCheck();
-    appState.logItems = await ipc.getLog();
-    appState.logCursor = 0;
-    appState.logScroll = 0;
-    appState.logLoadedAt = new Date();
-    appState.view = "log";
+    // 3. Fetch data
+    const items = await ipc.getLog();
+
+    // --- All succeeded — now reset and apply ---
+    resetAllState();
+    repoPath = canonical;
+    logItems = items;
+    logCursor = 0;
+    logScroll = 0;
+    logLoadedAt = new Date();
+    view = "log";
   } catch (e) {
-    appState.viewBeforeError = "repo-picker";
-    appState.errorMessage = String(e);
-    appState.view = "error";
+    // Best-effort rollback: restore previous CWD
+    if (previousPath) {
+      try {
+        await ipc.setRepo(previousPath);
+        // Old data is intact (resetAllState never ran)
+        viewBeforeError = previousView;
+        errorMessage = `Failed to open ${path}: ${String(e)}`;
+        view = "error";
+      } catch {
+        // Double failure — previous repo also unavailable
+        repoPath = "";
+        viewBeforeError = "welcome";
+        errorMessage = `Failed to open ${path}: ${String(e)}. Previous repository is also unavailable.`;
+        view = "error";
+      }
+    } else {
+      // No previous repo
+      viewBeforeError = "welcome";
+      errorMessage = `Failed to open ${path}: ${String(e)}`;
+      view = "error";
+    }
   }
 }
 
-export async function showRepoPicker() {
+export async function showWelcome() {
   try {
     const cfg = await ipc.getAppConfig();
     recentRepos = cfg.recent_repos;
   } catch {
     recentRepos = [];
   }
-  repoPickerCursor = 0;
-  view = "repo-picker";
+  view = "welcome";
 }
 
 export async function loadLog() {
@@ -673,6 +708,7 @@ export async function refreshDiff() {
   try {
     // --- Gather all results before touching state ---
     const result = await ipc.loadDiff(appState.diffMode);
+    if (view !== "loading") return; // bail if repo switch started
 
     // Validate result structure
     validateDiffResult(result);
@@ -686,7 +722,9 @@ export async function refreshDiff() {
 
     // Complete remaining IPC before any state mutation
     const newTree = await ipc.buildTree(result.files);
+    if (view !== "loading") return;
     const reviewState = await ipc.getReviewStatus(result.scope, result.files);
+    if (view !== "loading") return;
 
     // Validate review indices before using them
     validateReviewIndices(reviewState.reviewed_indices, result.files.length);

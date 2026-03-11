@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { appState, startCompare, treeFileOrder, showRepoPicker, loadLog, shortenPath } from "$lib/stores/app.svelte";
+  import { appState, startCompare, treeFileOrder, loadLog, shortenPath } from "$lib/stores/app.svelte";
   import { colors, fonts } from "$lib/theme";
 
   let repoDisplay = $derived.by(() => {
@@ -117,8 +117,6 @@
     <span class="right" style:color={colors.unchanged}>
       <span class="hint-link" onclick={openHelp}>? help</span>
       <span> &middot; </span>
-      <span class="hint-link" onclick={() => showRepoPicker()}>o open repo</span>
-      <span> &middot; </span>
       <span class="hint-link" onclick={() => startCompare()}>c compare</span>
       <span> &middot; </span>
       <span class="hint-link" onclick={() => loadLog()}>ctrl+r refresh</span>
@@ -133,6 +131,10 @@
       <span class="hint-link" onclick={openSearch}>/ search</span>
       <span> &middot; </span>
       <span class="hint-link" onclick={compareBack}>Esc back</span>
+    </span>
+  {:else if appState.view === "welcome"}
+    <span class="left" style:color={colors.unchanged}>
+      Press o or click the top bar to open a repository
     </span>
   {/if}
 </div>
