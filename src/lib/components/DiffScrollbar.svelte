@@ -50,14 +50,52 @@
     }
   });
 
-  function handleClick(e: MouseEvent) {
-    if (!trackEl || totalRows === 0) return;
+  let dragging = $state(false);
+  let dragOffset = 0;
+
+  function scrollToFraction(fraction: number) {
+    if (totalRows === 0) return;
+    const vp = appState.viewportRows || 30;
+    const maxScroll = Math.max(0, totalRows - vp);
+    const clamped = Math.max(0, Math.min(1, fraction));
+    appState.diffScroll = Math.round(clamped * maxScroll);
+    appState.diffCursor = Math.max(0, Math.min(totalRows - 1,
+      appState.diffScroll + Math.floor(vp / 2)
+    ));
+  }
+
+  function handleTrackClick(e: MouseEvent) {
+    if (!trackEl || totalRows === 0 || dragging) return;
     const rect = trackEl.getBoundingClientRect();
     const fraction = (e.clientY - rect.top) / rect.height;
-    const row = Math.round(fraction * (totalRows - 1));
-    appState.diffCursor = Math.max(0, Math.min(totalRows - 1, row));
-    const vp = appState.viewportRows || 30;
-    appState.diffScroll = Math.max(0, Math.min(totalRows - vp, appState.diffCursor - Math.floor(vp / 2)));
+    scrollToFraction(fraction);
+  }
+
+  function handleThumbDown(e: MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    dragging = true;
+    const thumbTop = thumbInfo.top;
+    dragOffset = e.clientY - (trackEl!.getBoundingClientRect().top + thumbTop);
+    window.addEventListener("mousemove", handleDragMove);
+    window.addEventListener("mouseup", handleDragEnd);
+  }
+
+  function handleDragMove(e: MouseEvent) {
+    if (!trackEl) return;
+    const rect = trackEl.getBoundingClientRect();
+    const thumbSize = thumbInfo.height;
+    const scrollableHeight = trackHeight - thumbSize;
+    if (scrollableHeight <= 0) return;
+    const thumbTop = e.clientY - rect.top - dragOffset;
+    const fraction = thumbTop / scrollableHeight;
+    scrollToFraction(fraction);
+  }
+
+  function handleDragEnd() {
+    dragging = false;
+    window.removeEventListener("mousemove", handleDragMove);
+    window.removeEventListener("mouseup", handleDragEnd);
   }
 </script>
 
@@ -65,7 +103,7 @@
   class="scrollbar"
   style:background={colors.scrollbarTrack}
   bind:this={trackEl}
-  onclick={handleClick}
+  onclick={handleTrackClick}
   role="presentation"
 >
   <!-- Hunk marks -->
@@ -81,9 +119,12 @@
   <!-- Thumb -->
   <div
     class="thumb"
+    class:dragging
     style:top="{thumbInfo.top}px"
     style:height="{thumbInfo.height}px"
     style:background={colors.scrollbarThumb}
+    onmousedown={handleThumbDown}
+    role="presentation"
   ></div>
 
   <!-- Cursor indicator -->
@@ -114,8 +155,15 @@
     left: 2px;
     width: 10px;
     border-radius: 5px;
-    pointer-events: none;
     opacity: 0.5;
+    cursor: grab;
+  }
+  .thumb:hover {
+    opacity: 0.7;
+  }
+  .thumb.dragging {
+    opacity: 0.8;
+    cursor: grabbing;
   }
   .cursor-indicator {
     position: absolute;

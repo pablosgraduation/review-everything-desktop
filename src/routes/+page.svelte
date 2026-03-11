@@ -96,6 +96,23 @@
     height: 100%;
     overflow: hidden;
   }
+  :global(::-webkit-scrollbar) {
+    width: 8px;
+    height: 8px;
+  }
+  :global(::-webkit-scrollbar-track) {
+    background: transparent;
+  }
+  :global(::-webkit-scrollbar-thumb) {
+    background: rgb(80, 80, 80);
+    border-radius: 4px;
+  }
+  :global(::-webkit-scrollbar-thumb:hover) {
+    background: rgb(110, 110, 110);
+  }
+  :global(::-webkit-scrollbar-corner) {
+    background: transparent;
+  }
   .app {
     display: flex;
     flex-direction: column;

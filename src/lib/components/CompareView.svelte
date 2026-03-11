@@ -120,7 +120,7 @@
     display: flex;
     align-items: center;
     height: 32px;
-    padding: 0 16px;
+    padding: 0 8px 0 16px;
     cursor: pointer;
     white-space: nowrap;
     overflow: hidden;

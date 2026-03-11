@@ -133,7 +133,7 @@
     display: flex;
     align-items: center;
     height: 30px;
-    padding: 0 16px;
+    padding: 0 8px 0 16px;
     cursor: pointer;
     white-space: nowrap;
     overflow: hidden;
@@ -174,6 +174,6 @@
   }
   .separator {
     height: 1px;
-    margin: 4px 16px;
+    margin: 4px 8px 4px 16px;
   }
 </style>
