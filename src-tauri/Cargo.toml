@@ -1,6 +1,6 @@
 [package]
 name = "review-everything-desktop"
-version = "0.1.0"
+version = "0.2.0"
 description = "Desktop diff viewer powered by difftastic"
 authors = ["pablosgraduation"]
 license = "MIT"
