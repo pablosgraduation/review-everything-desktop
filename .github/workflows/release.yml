@@ -71,6 +71,7 @@ jobs:
           git clone https://github.com/Wilfred/difftastic.git /tmp/difftastic
           cd /tmp/difftastic
           git checkout d7dcb61f7
+          rm -f rust-toolchain.toml
           cargo build --release --target ${{ matrix.target }}
           BINARY="/tmp/difftastic/target/${{ matrix.target }}/release/${{ matrix.difft_binary }}"
           cp "$BINARY" "$GITHUB_WORKSPACE/src-tauri/binaries/${{ matrix.sidecar_name }}"
