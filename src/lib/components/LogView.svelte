@@ -108,14 +108,15 @@
     justify-content: space-between;
     padding: 0 16px;
     flex-shrink: 0;
-    height: 36px;
+    height: 32px;
   }
   .title {
     font-weight: 600;
-    font-size: 13px;
-    letter-spacing: 0.01em;
+    font-size: 12px;
+    letter-spacing: 0.03em;
     flex-shrink: 0;
     white-space: nowrap;
+    text-transform: uppercase;
   }
   .hint {
     font-size: 11px;
@@ -131,7 +132,7 @@
   .item {
     display: flex;
     align-items: center;
-    height: 32px;
+    height: 30px;
     padding: 0 16px;
     cursor: pointer;
     white-space: nowrap;

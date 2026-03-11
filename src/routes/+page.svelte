@@ -12,6 +12,7 @@
   import StatusBar from "$lib/components/StatusBar.svelte";
   import HelpOverlay from "$lib/components/HelpOverlay.svelte";
   import SearchOverlay from "$lib/components/SearchOverlay.svelte";
+  import Toast from "$lib/components/Toast.svelte";
 
   onMount(() => {
     window.addEventListener("keydown", handleKeydown);
@@ -77,6 +78,7 @@
     {/if}
   </div>
   <SearchOverlay />
+  <Toast />
   <StatusBar />
   {#if appState.view === "help"}
     <HelpOverlay />

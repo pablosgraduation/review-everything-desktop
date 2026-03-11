@@ -273,6 +273,7 @@ pub fn set_repo(path: String) -> Result<String, String> {
     if !git_check.status.success() {
         return Err(format!("Not a git repository: {canonical_str}"));
     }
+    let git_root = String::from_utf8_lossy(&git_check.stdout).trim().to_string();
 
     // Validate difft is available
     let difft_check = std::process::Command::new(difft_path())
@@ -284,18 +285,18 @@ pub fn set_repo(path: String) -> Result<String, String> {
     }
 
     // Change process cwd — all git commands use this implicitly
-    std::env::set_current_dir(&canonical)
+    std::env::set_current_dir(&git_root)
         .map_err(|e| format!("Failed to set working directory: {e}"))?;
 
     // Update config
     let mut cfg = config::load_config();
-    cfg.last_repo = Some(canonical_str.clone());
-    cfg.recent_repos.retain(|r| r != &canonical_str);
-    cfg.recent_repos.insert(0, canonical_str.clone());
+    cfg.last_repo = Some(git_root.clone());
+    cfg.recent_repos.retain(|r| r != &git_root);
+    cfg.recent_repos.insert(0, git_root.clone());
     cfg.recent_repos.truncate(10);
     config::save_config(&cfg);
 
-    Ok(canonical_str)
+    Ok(git_root)
 }
 
 #[tauri::command]

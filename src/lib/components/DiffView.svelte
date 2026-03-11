@@ -2,7 +2,7 @@
   import DiffPane from "./DiffPane.svelte";
   import DiffFindBar from "./DiffFindBar.svelte";
   import DiffScrollbar from "./DiffScrollbar.svelte";
-  import { appState, exitDiff, goToNextFileInTree, goToPrevFileInTree, treeFileOrder, toggleReviewed, clearReviews, openDiffFind, closeDiffFind } from "$lib/stores/app.svelte";
+  import { appState, goToNextFileInTree, goToPrevFileInTree, treeFileOrder, toggleReviewed, clearReviews, openDiffFind, closeDiffFind } from "$lib/stores/app.svelte";
   import { colors } from "$lib/theme";
 
   let order = $derived(treeFileOrder());
@@ -24,7 +24,6 @@
 <div class="diff-view" style:background={colors.bg}>
   <div class="diff-header" style:color={colors.white} style:border-bottom="1px solid {colors.border}">
     <span class="nav-controls">
-      <span class="nav-btn" style:color={colors.fgMuted} onclick={() => exitDiff()} title="Back to commits">⌂</span>
       <span
         class="nav-btn"
         style:color={isFirstFile ? colors.fgDim : colors.fgMuted}

@@ -33,6 +33,9 @@ let recentRepos = $state<string[]>([]);
 // Top bar
 let topBarFocused = $state(false);
 
+// Resolution notice (when user picks nested dir, backend resolves to git root)
+let resolvedFromPath = $state("");
+
 // Log
 let logItems = $state<LogItem[]>([]);
 let logCursor = $state(0);
@@ -142,6 +145,10 @@ export const appState = {
   // Top bar
   get topBarFocused() { return topBarFocused; },
   set topBarFocused(v: boolean) { topBarFocused = v; },
+
+  // Resolution notice
+  get resolvedFromPath() { return resolvedFromPath; },
+  set resolvedFromPath(v: string) { resolvedFromPath = v; },
 
   // Log
   get logItems() { return logItems; },
@@ -407,6 +414,9 @@ function resetAllState() {
   diffFindSearchNew = true;
   diffFindCurrent = 0;
 
+  // Resolution notice
+  resolvedFromPath = "";
+
   // Error/loading
   errorMessage = "";
   loadingMessage = "";
@@ -434,7 +444,18 @@ export async function openRepo(path: string) {
     const items = await ipc.getLog();
 
     // --- All succeeded — now reset and apply ---
+    // Detect if backend resolved a nested dir to git root
+    let normalizedInput = path;
+    if (homeDir && (normalizedInput.startsWith("~/") || normalizedInput === "~")) {
+      normalizedInput = homeDir + normalizedInput.slice(1);
+    }
+    normalizedInput = normalizedInput.replace(/\/+$/, "");
+    const wasResolved = canonical !== normalizedInput;
+
     resetAllState();
+    if (wasResolved) {
+      resolvedFromPath = shortenPath(normalizedInput);
+    }
     repoPath = canonical;
     logItems = items;
     logCursor = 0;
@@ -485,7 +506,7 @@ export async function loadLog() {
     appState.logLoadedAt = new Date();
     appState.view = "log";
   } catch (e) {
-    appState.viewBeforeError = "log";
+    appState.viewBeforeError = "welcome";
     appState.errorMessage = String(e);
     appState.view = "error";
   }
@@ -562,25 +583,39 @@ export function selectLogItem(index: number) {
 }
 
 export async function startCompare() {
-  appState.compareItems = await ipc.getCompareItems();
-  appState.compareCursor = 0;
-  appState.compareScroll = 0;
-  // Close any active search — it may have been opened with stale view context
-  appState.searchActive = false;
-  appState.searchQuery = "";
-  appState.searchFiltered = [];
-  appState.view = "compare-new";
+  try {
+    const items = await ipc.getCompareItems();
+    appState.compareItems = items;
+    appState.compareCursor = 0;
+    appState.compareScroll = 0;
+    // Close any active search — it may have been opened with stale view context
+    appState.searchActive = false;
+    appState.searchQuery = "";
+    appState.searchFiltered = [];
+    appState.view = "compare-new";
+  } catch (e) {
+    appState.viewBeforeError = "welcome";
+    appState.errorMessage = String(e);
+    appState.view = "error";
+  }
 }
 
 export async function selectCompareNew(index: number) {
   const item = appState.compareItems[index];
   if (!item) return;
-  appState.compareNewRev = item.rev;
-  appState.compareNewLabel = item.label;
-  appState.compareItems = await ipc.getCompareOldItems(item.rev);
-  appState.compareCursor = 0;
-  appState.compareScroll = 0;
-  appState.view = "compare-old";
+  try {
+    const oldItems = await ipc.getCompareOldItems(item.rev);
+    appState.compareNewRev = item.rev;
+    appState.compareNewLabel = item.label;
+    appState.compareItems = oldItems;
+    appState.compareCursor = 0;
+    appState.compareScroll = 0;
+    appState.view = "compare-old";
+  } catch (e) {
+    appState.viewBeforeError = "welcome";
+    appState.errorMessage = String(e);
+    appState.view = "error";
+  }
 }
 
 export function selectCompareOld(index: number) {
@@ -682,7 +717,7 @@ export async function clearReviews() {
   await ipc.clearAllReviews();
 }
 
-export function exitDiff() {
+export async function exitDiff() {
   diffFindActive = false;
   diffFindQuery = "";
   appState.reviewed = new Set();
@@ -693,7 +728,7 @@ export function exitDiff() {
   appState.initialFileCount = 0;
   appState.baselineFilePaths = new Set();
   appState.baselineFileHashes = new Map();
-  appState.view = "log";
+  await loadLog();
 }
 
 export async function refreshDiff() {
@@ -817,6 +852,14 @@ export function jumpToNearestDiffFindMatch() {
   diffFindCurrent = idx;
   diffCursor = diffFindMatches[idx].row;
   ensureDiffCursorVisible(viewportRows);
+}
+
+export async function goHome() {
+  if (appState.view === "diff") {
+    await exitDiff();
+  } else {
+    await loadLog();
+  }
 }
 
 /// Shorten a path by replacing the home directory prefix with ~.

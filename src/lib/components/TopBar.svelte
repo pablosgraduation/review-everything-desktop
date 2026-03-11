@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { appState, openRepo, showWelcome, shortenPath } from "$lib/stores/app.svelte";
+  import { appState, openRepo, showWelcome, shortenPath, goHome } from "$lib/stores/app.svelte";
   import * as ipc from "$lib/ipc";
   import { colors, fonts } from "$lib/theme";
+  import { getCurrentWindow } from "@tauri-apps/api/window";
 
   let inputEl = $state<HTMLInputElement | null>(null);
   let inputValue = $state("");
@@ -19,7 +20,24 @@
     return shortenPath(p);
   });
 
+  // Glow the path display on every successful repo open
+  let glowing = $state(false);
+  let glowTimer: ReturnType<typeof setTimeout> | undefined;
+  let lastGlowPath = "";
+
+  $effect(() => {
+    const p = appState.repoPath;
+    if (p && p !== lastGlowPath) {
+      lastGlowPath = p;
+      clearTimeout(glowTimer);
+      glowing = true;
+      glowTimer = setTimeout(() => { glowing = false; }, 1500);
+    }
+  });
+
   let isDisabled = $derived(appState.view === "loading");
+  let showHomeButton = $derived(!!appState.repoPath);
+  let isHome = $derived(appState.view === "log");
 
   function focusInput() {
     if (isDisabled) return;
@@ -207,6 +225,32 @@
     return showRecents && appState.recentRepos.length > 0;
   }
 
+  let lastMouseY = $state(0);
+
+  function handleDropdownMouseMove(e: MouseEvent, idx: number) {
+    if (Math.abs(e.clientY - lastMouseY) < 2) return;
+    lastMouseY = e.clientY;
+    suggestionCursor = idx;
+  }
+
+  const INTERACTIVE_TAGS = new Set(["INPUT", "BUTTON", "TEXTAREA", "SELECT", "A"]);
+
+  function handleDrag(e: MouseEvent) {
+    if (e.button !== 0) return;
+    const target = e.target as HTMLElement;
+    if (INTERACTIVE_TAGS.has(target.tagName)) return;
+    if (target.closest("button")) return;
+    // Don't drag from dropdown items
+    if (target.closest(".dropdown")) return;
+
+    e.preventDefault();
+    if (e.detail === 2) {
+      getCurrentWindow().toggleMaximize();
+    } else {
+      getCurrentWindow().startDragging();
+    }
+  }
+
   onMount(() => {
     window.addEventListener("re:focus-top-bar", handleFocusTopBar);
     document.addEventListener("mousedown", handleClickOutside);
@@ -216,10 +260,27 @@
     window.removeEventListener("re:focus-top-bar", handleFocusTopBar);
     document.removeEventListener("mousedown", handleClickOutside);
     clearTimeout(debounceTimer);
+    clearTimeout(glowTimer);
   });
 </script>
 
-<div class="top-bar" style:background={colors.bg} style:border-bottom="1px solid {colors.border}" style:font-family={fonts.ui} bind:this={wrapperEl}>
+<div class="top-bar" style:font-family={fonts.ui} bind:this={wrapperEl} onmousedown={handleDrag}>
+  {#if showHomeButton}
+    <button
+      class="home-btn"
+      onclick={() => goHome()}
+      disabled={isDisabled}
+      title="Go to log"
+    >
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {#if isHome}
+          <path d="M8 1.5L1.5 7V14h4.5v-4h4v4h4.5V7L8 1.5z" fill="currentColor"/>
+        {:else}
+          <path d="M8 1.5L1.5 7V14h4.5v-4h4v4h4.5V7L8 1.5z" stroke="currentColor" stroke-width="1.2"/>
+        {/if}
+      </svg>
+    </button>
+  {/if}
   <div class="input-wrapper">
     {#if appState.topBarFocused}
       <input
@@ -241,6 +302,7 @@
     {:else}
       <button
         class="path-display"
+        class:path-glow={glowing}
         style:color={displayPath ? colors.fgMuted : colors.unchanged}
         style:border-color={colors.border}
         style:font-family={fonts.mono}
@@ -261,6 +323,7 @@
               class:active={i === suggestionCursor}
               style:background={i === suggestionCursor ? colors.selected : "transparent"}
               style:color={i === suggestionCursor ? colors.fg : colors.fgMuted}
+              onmousemove={(e) => handleDropdownMouseMove(e, i)}
               onclick={() => selectRecent(repo)}
               role="button"
               tabindex="-1"
@@ -282,6 +345,7 @@
               class:active={i === suggestionCursor}
               style:background={i === suggestionCursor ? colors.selected : "transparent"}
               style:color={i === suggestionCursor ? colors.fg : colors.fgMuted}
+              onmousemove={(e) => handleDropdownMouseMove(e, i)}
               onclick={() => selectSuggestion(s)}
               role="button"
               tabindex="-1"
@@ -310,35 +374,48 @@
   .top-bar {
     display: flex;
     align-items: center;
-    height: 36px;
-    padding: 0 12px;
+    justify-content: center;
+    height: 42px;
+    padding: 0 80px;
     gap: 8px;
     flex-shrink: 0;
     position: relative;
     z-index: 50;
+    background: rgb(24, 24, 24);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
   }
   .input-wrapper {
     flex: 1;
     position: relative;
     min-width: 0;
+    max-width: 480px;
   }
   .path-display {
     width: 100%;
-    background: transparent;
-    border: 1px solid;
-    border-radius: 6px;
-    padding: 4px 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 7px;
+    padding: 5px 12px;
     font-size: 12px;
     text-align: left;
     cursor: pointer;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    transition: border-color 0.1s;
+    transition: border-color 0.15s, background 0.15s;
     box-sizing: border-box;
   }
+  .path-glow {
+    animation: path-glow-pulse 1.5s ease-out forwards;
+  }
+  @keyframes path-glow-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(100, 140, 255, 0.5); }
+    30% { box-shadow: 0 0 8px 2px rgba(100, 140, 255, 0.4); }
+    100% { box-shadow: none; }
+  }
   .path-display:hover:not(:disabled) {
-    border-color: rgb(80, 80, 90) !important;
+    background: rgba(255, 255, 255, 0.07) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
   }
   .path-display:disabled {
     opacity: 0.5;
@@ -346,10 +423,10 @@
   }
   .path-input {
     width: 100%;
-    background: transparent;
+    background: rgba(0, 0, 0, 0.25);
     border: 1px solid;
-    border-radius: 6px;
-    padding: 4px 12px;
+    border-radius: 7px;
+    padding: 5px 12px;
     font-size: 12px;
     box-sizing: border-box;
   }
@@ -361,35 +438,34 @@
   }
   .dropdown {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 4px);
     left: 0;
     right: 0;
     background: rgb(30, 30, 35);
-    border: 1px solid;
-    border-top: none;
-    border-radius: 0 0 6px 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
     max-height: 240px;
     overflow-y: auto;
     z-index: 50;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   }
   .dropdown-label {
-    font-size: 11px;
+    font-size: 10px;
+    font-weight: 500;
     letter-spacing: 0.5px;
-    padding: 6px 12px 2px;
+    padding: 8px 12px 4px;
   }
   .dropdown-item {
     display: flex;
     align-items: center;
-    padding: 5px 12px;
+    padding: 6px 12px;
     font-size: 12px;
     cursor: pointer;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-  .dropdown-item:hover {
-    background: rgba(255, 255, 255, 0.04) !important;
+    border-radius: 4px;
+    margin: 1px 4px;
   }
   .dropdown-item-path {
     flex: 1;
@@ -411,19 +487,47 @@
   .dropdown-item.active .remove-btn:hover {
     opacity: 1;
   }
+  .home-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.07);
+    color: rgba(255, 255, 255, 0.55);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+    transition: background 0.15s, color 0.15s;
+  }
+  .home-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.9);
+  }
+  .home-btn:active:not(:disabled) {
+    background: rgba(255, 255, 255, 0.07);
+    color: rgba(255, 255, 255, 0.55);
+  }
+  .home-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
   .open-btn {
-    background: transparent;
-    border: 1px solid;
-    border-radius: 6px;
-    padding: 4px 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 7px;
+    padding: 5px 14px;
     font-size: 12px;
     cursor: pointer;
-    transition: opacity 0.1s;
+    transition: background 0.15s, border-color 0.15s;
     font-family: inherit;
     flex-shrink: 0;
   }
   .open-btn:hover:not(:disabled) {
-    opacity: 0.7;
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.10);
   }
   .open-btn:disabled {
     opacity: 0.3;

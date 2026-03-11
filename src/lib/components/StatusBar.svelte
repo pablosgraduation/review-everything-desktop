@@ -38,7 +38,7 @@
     if (appState.view === "compare-old") {
       startCompare(); // Go back to pick-new
     } else {
-      appState.view = "log";
+      loadLog();
     }
   }
 
@@ -110,6 +110,9 @@
   {:else if appState.view === "log"}
     <span class="left" style:color={colors.fg}>
       {repoDisplay}
+      {#if appState.resolvedFromPath}
+        <span style:color={colors.unchanged}>&nbsp;&middot; Resolved user entered subdirectory to git root</span>
+      {/if}
       {#if logTimestamp}
         <span style:color={colors.unchanged}>&nbsp;&middot; Updated: {logTimestamp}</span>
       {/if}

@@ -257,7 +257,7 @@ function handleCompareKey(e: KeyboardEvent) {
       if (appState.view === "compare-old") {
         startCompare(); // Go back to pick-new
       } else {
-        appState.view = "log";
+        loadLog();
       }
       e.preventDefault();
       break;
