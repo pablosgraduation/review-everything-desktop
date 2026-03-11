@@ -19,7 +19,7 @@ jobs:
             difft_archive: difft-aarch64-apple-darwin.tar.gz
             difft_binary: difft
             sidecar_name: difft-aarch64-apple-darwin
-          - platform: macos-13
+          - platform: macos-latest
             target: x86_64-apple-darwin
             difft_archive: difft-x86_64-apple-darwin.tar.gz
             difft_binary: difft
@@ -65,6 +65,13 @@ jobs:
       # TODO: Revert to downloading release binaries once difftastic makes a new
       # release (>0.67.0) that includes the improvements we need. Replace this
       # "Build difftastic from source" block with the commented-out block below.
+      - name: Set cross-compile env for macOS x86_64
+        if: matrix.target == 'x86_64-apple-darwin'
+        run: |
+          echo "CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER=clang" >> $GITHUB_ENV
+          echo "CC_x86_64_apple_darwin=clang -target x86_64-apple-darwin" >> $GITHUB_ENV
+          echo "CFLAGS_x86_64_apple_darwin=-target x86_64-apple-darwin" >> $GITHUB_ENV
+
       - name: Build difftastic from source
         shell: bash
         run: |
