@@ -123,7 +123,7 @@
   <div class="line-content">
     <div class="line-content-inner" style:transform="translateX(-{hScroll}ch)">
       {#if side.is_filler}
-        <span class="filler" style:color={colors.dimmed}>&nbsp;</span>
+        <span class="filler" style:color={colors.dimmed}>{"╱ ".repeat(200)}</span>
       {:else}
         {#each spans as span}
           <span style:color={span.fg} style:background={span.bg}>{span.text}</span>
