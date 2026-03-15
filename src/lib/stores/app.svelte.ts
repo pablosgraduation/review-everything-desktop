@@ -526,6 +526,8 @@ export async function showWelcome() {
 }
 
 export async function loadLog() {
+  appState.loadingMessage = "Loading...";
+  appState.view = "loading";
   try {
     await ipc.preflightCheck();
     appState.logItems = await ipc.getLog();

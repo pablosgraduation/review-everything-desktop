@@ -117,7 +117,7 @@ pub fn get_git_root() -> Result<String, String> {
 }
 
 #[tauri::command]
-pub fn get_log() -> Result<Vec<LogItem>, String> {
+pub async fn get_log() -> Result<Vec<LogItem>, String> {
     let entries = git::git_log(200)?;
     let has_unstaged = git::has_unstaged_changes();
     let has_staged = git::has_staged_changes();
@@ -142,7 +142,7 @@ pub fn get_log() -> Result<Vec<LogItem>, String> {
 }
 
 #[tauri::command]
-pub fn get_compare_items() -> Vec<CompareItem> {
+pub async fn get_compare_items() -> Vec<CompareItem> {
     let mut items = Vec::new();
     if git::has_unstaged_changes() {
         items.push(CompareItem {
@@ -176,7 +176,7 @@ pub fn get_compare_items() -> Vec<CompareItem> {
 }
 
 #[tauri::command]
-pub fn get_compare_old_items(new_rev: String) -> Vec<CompareItem> {
+pub async fn get_compare_old_items(new_rev: String) -> Vec<CompareItem> {
     let mut items = Vec::new();
     if new_rev == "--working-tree" {
         items.push(CompareItem {
@@ -206,7 +206,7 @@ pub fn get_compare_old_items(new_rev: String) -> Vec<CompareItem> {
 /// Load a diff. `mode` is one of: "staged", "unstaged", "range:<revspec>",
 /// "working-tree:<commit>", "staged-vs-commit:<commit>".
 #[tauri::command]
-pub fn load_diff(mode: String) -> Result<DiffResult, String> {
+pub async fn load_diff(mode: String) -> Result<DiffResult, String> {
     let diff_mode = parse_diff_mode(&mode)?;
     let scope = diff_mode.scope_key();
     let context = diff_mode.context_label();
