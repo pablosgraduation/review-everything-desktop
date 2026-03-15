@@ -437,8 +437,13 @@ function handleDiffKey(e: KeyboardEvent) {
       e.preventDefault();
       break;
     case "t":
-      appState.showTree = !appState.showTree;
-      appState.treeFocused = appState.showTree;
+      if (appState.treeVisible) {
+        appState.showTree = false;
+        appState.treeFocused = false;
+      } else {
+        appState.showTree = true;
+        appState.treeFocused = true;
+      }
       e.preventDefault();
       break;
     case "r":
@@ -570,6 +575,9 @@ function handleTreeKey(e: KeyboardEvent) {
     case "Tab":
     case "Escape":
       appState.treeFocused = false;
+      if (appState.treeAutoHide) {
+        appState.showTree = false;
+      }
       e.preventDefault();
       break;
     case "t":

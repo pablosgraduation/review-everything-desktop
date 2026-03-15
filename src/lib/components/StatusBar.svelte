@@ -100,6 +100,12 @@
       <span style:color={colors.unchanged}>&nbsp;&middot;&nbsp;Right:</span> <span style:color={colors.fg} title={appState.diffContext.right}>{truncate(appState.diffContext.right, 40)}</span>
     </span>
     <span class="right">
+      {#if appState.treeAutoHide || appState.treeHoverEnabled}
+        <span style:color={colors.unchanged}>
+          tree:{appState.treeAutoHide ? "AF" : ""}{appState.treeHoverEnabled ? "AH" : ""}
+        </span>
+        <span style:color={colors.unchanged}>&nbsp;&middot;&nbsp;</span>
+      {/if}
       {#if reviewInfo}
         <span style:color={appState.reviewed.size === appState.diffFiles.length ? colors.green : colors.unchanged}>
           {reviewInfo}

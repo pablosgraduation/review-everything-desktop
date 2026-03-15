@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { appState, goToFile, goToNextFileInTree, goToPrevFileInTree, treeFileOrder, toggleReviewed, clearReviews, exitDiff, refreshDiff, openDiffFind, closeDiffFind } from "$lib/stores/app.svelte";
+  import { appState, goToFile, goToNextFileInTree, goToPrevFileInTree, treeFileOrder, toggleReviewed, clearReviews, exitDiff, refreshDiff, openDiffFind, closeDiffFind, toggleTreeAutoHide, toggleTreeHover } from "$lib/stores/app.svelte";
   import { colors, fonts, statusColor } from "$lib/theme";
   import { modLabel } from "$lib/platform";
   import type { TreeNode } from "$lib/types";
@@ -269,6 +269,24 @@
         title="Refresh diff"
       >↻</span>
     </span>
+    <span class="toolbar-group">
+      <span class="tb-btn tb-label"
+        style:color={appState.treeAutoHide ? colors.fg : colors.fgDim}
+        onclick={() => toggleTreeAutoHide()}
+        title="Auto-focus hide: {appState.treeAutoHide ? 'on' : 'off'}"
+      >AF</span>
+      <span class="tb-btn tb-label"
+        style:color={appState.treeHoverEnabled ? colors.fg : colors.fgDim}
+        onclick={() => toggleTreeHover()}
+        title="Auto-hover hide: {appState.treeHoverEnabled ? 'on' : 'off'}"
+      >AH</span>
+      <span class="tb-sep" style:background={colors.border}></span>
+      <span class="tb-btn"
+        style:color={colors.fgMuted}
+        onclick={() => { appState.showTree = false; appState.treeFocused = false; }}
+        title="Hide tree (t)"
+      >⇤</span>
+    </span>
   </div>
 </div>
 
@@ -383,6 +401,11 @@
   }
   .tb-btn:hover {
     opacity: 0.7;
+  }
+  .tb-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
   }
   .tb-sep {
     width: 1px;

@@ -9,10 +9,29 @@
   import CompareView from "$lib/components/CompareView.svelte";
   import DiffView from "$lib/components/DiffView.svelte";
   import TreePane from "$lib/components/TreePane.svelte";
+  import CollapsedTreeStrip from "$lib/components/CollapsedTreeStrip.svelte";
   import StatusBar from "$lib/components/StatusBar.svelte";
   import HelpOverlay from "$lib/components/HelpOverlay.svelte";
   import SearchOverlay from "$lib/components/SearchOverlay.svelte";
   import Toast from "$lib/components/Toast.svelte";
+
+  let hideTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function handleTreeAreaEnter() {
+    clearTimeout(hideTimer);
+    if (appState.treeHoverEnabled) {
+      appState.treeHovered = true;
+    }
+  }
+
+  function handleTreeAreaLeave() {
+    appState.treeFocused = false;
+    if (appState.treeHoverEnabled) {
+      hideTimer = setTimeout(() => {
+        appState.treeHovered = false;
+      }, 250);
+    }
+  }
 
   onMount(() => {
     window.addEventListener("keydown", handleKeydown);
@@ -71,9 +90,18 @@
         </div>
       </div>
     {:else if appState.view === "diff"}
-      {#if appState.showTree}
-        <TreePane />
-      {/if}
+      <div
+        class="tree-area"
+        class:expanded={appState.treeVisible}
+        onmouseenter={handleTreeAreaEnter}
+        onmouseleave={handleTreeAreaLeave}
+      >
+        {#if appState.treeVisible}
+          <TreePane />
+        {:else}
+          <CollapsedTreeStrip />
+        {/if}
+      </div>
       <DiffView />
     {/if}
   </div>
@@ -134,6 +162,15 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+  }
+  .tree-area {
+    width: 28px;
+    flex-shrink: 0;
+    overflow: hidden;
+    height: 100%;
+  }
+  .tree-area.expanded {
+    width: 280px;
   }
   .spinner {
     width: 24px;

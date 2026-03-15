@@ -65,6 +65,9 @@ let showTree = $state(true);
 let treeFocused = $state(false);
 let treeCursor = $state(0);
 let treeScroll = $state(0);
+let treeAutoHide = $state(false);
+let treeHoverEnabled = $state(false);
+let treeHovered = $state(false);
 
 // Compare
 let compareItems = $state<CompareItem[]>([]);
@@ -203,6 +206,17 @@ export const appState = {
   set treeCursor(v: number) { treeCursor = v; },
   get treeScroll() { return treeScroll; },
   set treeScroll(v: number) { treeScroll = v; },
+  get treeAutoHide() { return treeAutoHide; },
+  set treeAutoHide(v: boolean) { treeAutoHide = v; },
+  get treeHoverEnabled() { return treeHoverEnabled; },
+  set treeHoverEnabled(v: boolean) { treeHoverEnabled = v; },
+  get treeHovered() { return treeHovered; },
+  set treeHovered(v: boolean) { treeHovered = v; },
+  get treeVisible(): boolean {
+    if (showTree) return true;
+    if (treeHoverEnabled && treeHovered) return true;
+    return false;
+  },
 
   // Compare
   get compareItems() { return compareItems; },
@@ -253,6 +267,17 @@ export const appState = {
     return diffFiles[currentFileIdx]?.rows.length ?? 0;
   },
 };
+
+export function toggleTreeAutoHide() {
+  treeAutoHide = !treeAutoHide;
+}
+
+export function toggleTreeHover() {
+  treeHoverEnabled = !treeHoverEnabled;
+  if (!treeHoverEnabled) {
+    treeHovered = false;
+  }
+}
 
 // --- Validation ---
 
@@ -392,6 +417,9 @@ function resetAllState() {
   treeFocused = false;
   treeCursor = 0;
   treeScroll = 0;
+  treeAutoHide = false;
+  treeHoverEnabled = false;
+  treeHovered = false;
 
   // Compare
   compareItems = [];
