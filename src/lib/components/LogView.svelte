@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { appState, selectLogItem } from "$lib/stores/app.svelte";
+  import { appState, selectLogItem, startCompare } from "$lib/stores/app.svelte";
   import { colors, fonts } from "$lib/theme";
   import type { LogItem } from "$lib/types";
 
@@ -55,8 +55,11 @@
 
 <div class="log-view" style:background={colors.bg} style:font-family={fonts.ui}>
   <div class="header" style:border-bottom="1px solid {colors.border}">
-    <span class="title" style:color={colors.white}>Commits</span>
-    <span class="hint" style:color={colors.fgDim}>Enter to open · c compare · / search</span>
+    <div class="mode-switcher">
+      <button class="mode-btn active" style:background={colors.selected} style:color={colors.white} style:border-color={colors.border}>Commits</button>
+      <button class="mode-btn" style:color={colors.fgDim} style:border-color={colors.border} onclick={() => startCompare()}>Compare</button>
+    </div>
+    <span class="hint" style:color={colors.fgDim}>Enter to open · / search</span>
   </div>
   <div class="list" bind:this={listEl}>
     {#each visibleItems as { item, idx }}
@@ -110,13 +113,30 @@
     flex-shrink: 0;
     height: 32px;
   }
-  .title {
-    font-weight: 600;
-    font-size: 12px;
-    letter-spacing: 0.03em;
+  .mode-switcher {
+    display: flex;
     flex-shrink: 0;
-    white-space: nowrap;
+  }
+  .mode-btn {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
     text-transform: uppercase;
+    padding: 2px 10px;
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .mode-btn:first-child {
+    border-radius: 4px 0 0 4px;
+    border-right: none;
+  }
+  .mode-btn:last-child {
+    border-radius: 0 4px 4px 0;
+  }
+  .mode-btn.active {
+    cursor: default;
   }
   .hint {
     font-size: 11px;
