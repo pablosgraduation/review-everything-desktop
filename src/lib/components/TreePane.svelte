@@ -225,7 +225,6 @@
 
   <!-- Toolbar -->
   <div class="tree-toolbar" style:border-top="1px solid {colors.border}">
-    <span class="toolbar-group">
       <span class="tb-btn" style:color={colors.fgMuted} onclick={() => exitDiff()} title="Back to commits">⌂</span>
       <span
         class="tb-btn"
@@ -261,15 +260,25 @@
         onclick={() => appState.diffFindActive ? closeDiffFind() : openDiffFind()}
         title="Find in file ({modLabel}+F)"
       >/</span>
-      <span class="tb-sep" style:background={colors.border}></span>
       <span
         class="tb-btn"
         style:color={colors.fgMuted}
         onclick={() => refreshDiff()}
         title="Refresh diff"
       >↻</span>
-    </span>
-    <span class="toolbar-group">
+      <span
+        class="tb-btn"
+        style:color={colors.fgMuted}
+        onclick={() => { const prev = appState.view; import("$lib/keyboard").then(m => m.setViewBeforeHelp(prev)); appState.view = "help"; }}
+        title="Help (?)"
+      >?</span>
+      <span class="tb-sep" style:background={colors.border}></span>
+      <span
+        class="tb-btn tb-label"
+        onclick={() => { appState.highlightMode = (appState.highlightMode + 1) % 3; }}
+        title="Cycle highlight mode (Ctrl+H)"
+      ><span style:color={appState.highlightMode === 0 ? colors.fg : colors.fgDim}>E</span><span style:color={appState.highlightMode < 2 ? colors.fg : colors.fgDim}>S</span></span>
+      <span class="tb-sep" style:background={colors.border}></span>
       <span class="tb-btn tb-label"
         style:color={appState.treeAutoHide ? colors.fg : colors.fgDim}
         onclick={() => toggleTreeAutoHide()}
@@ -286,7 +295,6 @@
         onclick={() => { appState.showTree = false; appState.treeFocused = false; }}
         title="Hide tree (t)"
       >⇤</span>
-    </span>
   </div>
 </div>
 
@@ -380,16 +388,11 @@
   .tree-toolbar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 2px;
     padding: 0 8px;
     height: 28px;
     flex-shrink: 0;
     font-size: 11px;
-  }
-  .toolbar-group {
-    display: flex;
-    align-items: center;
-    gap: 2px;
   }
   .tb-btn {
     cursor: pointer;

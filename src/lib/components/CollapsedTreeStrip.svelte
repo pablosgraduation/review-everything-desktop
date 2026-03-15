@@ -47,15 +47,25 @@
       onclick={() => appState.diffFindActive ? closeDiffFind() : openDiffFind()}
       title="Find in file"
     >/</span>
-    <span class="strip-sep" style:background={colors.border}></span>
     <span
       class="strip-btn"
       style:color={colors.fgMuted}
       onclick={() => refreshDiff()}
       title="Refresh diff"
     >↻</span>
+    <span
+      class="strip-btn"
+      style:color={colors.fgMuted}
+      onclick={() => { const prev = appState.view; import("$lib/keyboard").then(m => m.setViewBeforeHelp(prev)); appState.view = "help"; }}
+      title="Help (?)"
+    >?</span>
   </div>
   <div class="strip-settings">
+    <span
+      class="strip-btn setting"
+      onclick={() => { appState.highlightMode = (appState.highlightMode + 1) % 3; }}
+      title="Cycle highlight mode (Ctrl+H)"
+    ><span style:color={appState.highlightMode === 0 ? colors.fg : colors.fgDim}>E</span><span style:color={appState.highlightMode < 2 ? colors.fg : colors.fgDim}>S</span></span>
     <span class="strip-sep" style:background={colors.border}></span>
     <span
       class="strip-btn setting"

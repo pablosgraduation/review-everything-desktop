@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Side, HighlightRegion } from "$lib/types";
   import { colors, syntaxColor } from "$lib/theme";
+  import { appState } from "$lib/stores/app.svelte";
 
   interface FindHighlight {
     start: number;
@@ -54,8 +55,10 @@
 
     // Full-line highlight
     if (hl.length === 1 && hl[0].end === FULL_LINE) {
-      const fg = hl[0].highlight ? syntaxColor(hl[0].highlight) : colors.fg;
-      const bg = isLeft ? colors.deletedEmphasis : colors.addedEmphasis;
+      const fg = appState.highlightMode < 2
+        ? (hl[0].highlight ? syntaxColor(hl[0].highlight) : colors.fg)
+        : colors.unchanged;
+      const bg = appState.highlightMode === 0 ? (isLeft ? colors.deletedEmphasis : colors.addedEmphasis) : "transparent";
       return [{ text: content, fg, bg }];
     }
 
@@ -83,8 +86,10 @@
       if (start < end) {
         spans.push({
           text: content.slice(start, end),
-          fg: region.highlight ? syntaxColor(region.highlight) : colors.fg,
-          bg: isLeft ? colors.deletedEmphasis : colors.addedEmphasis,
+          fg: appState.highlightMode < 2
+            ? (region.highlight ? syntaxColor(region.highlight) : colors.fg)
+            : colors.unchanged,
+          bg: appState.highlightMode === 0 ? (isLeft ? colors.deletedEmphasis : colors.addedEmphasis) : "transparent",
         });
       }
 

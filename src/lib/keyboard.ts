@@ -25,6 +25,9 @@ function viewport() {
   return appState.viewportRows || 30;
 }
 
+let lastSpaceTime = 0;
+const DOUBLE_TAP_MS = 300;
+
 export let viewBeforeHelp: string = "log";
 
 export function setViewBeforeHelp(v: string) {
@@ -360,6 +363,13 @@ function handleDiffKey(e: KeyboardEvent) {
     return;
   }
 
+  // Ctrl+H: cycle highlight mode
+  if (isModKey(e) && e.key === "h") {
+    appState.highlightMode = (appState.highlightMode + 1) % 3;
+    e.preventDefault();
+    return;
+  }
+
   switch (e.key) {
     case "j":
     case "ArrowDown":
@@ -472,6 +482,23 @@ function handleDiffKey(e: KeyboardEvent) {
       appState.view = "help";
       e.preventDefault();
       break;
+    case " ": {
+      const now = Date.now();
+      if (now - lastSpaceTime < DOUBLE_TAP_MS) {
+        lastSpaceTime = 0;
+        if (appState.treeVisible) {
+          appState.showTree = false;
+          appState.treeFocused = false;
+        } else {
+          appState.showTree = true;
+          appState.treeFocused = true;
+        }
+      } else {
+        lastSpaceTime = now;
+      }
+      e.preventDefault();
+      break;
+    }
   }
 }
 
@@ -493,6 +520,13 @@ function handleTreeKey(e: KeyboardEvent) {
     } else {
       openDiffFind();
     }
+    e.preventDefault();
+    return;
+  }
+
+  // Ctrl+H: cycle highlight mode
+  if (isModKey(e) && e.key === "h") {
+    appState.highlightMode = (appState.highlightMode + 1) % 3;
     e.preventDefault();
     return;
   }
@@ -594,6 +628,18 @@ function handleTreeKey(e: KeyboardEvent) {
       exitDiff();
       e.preventDefault();
       break;
+    case " ": {
+      const now = Date.now();
+      if (now - lastSpaceTime < DOUBLE_TAP_MS) {
+        lastSpaceTime = 0;
+        appState.showTree = false;
+        appState.treeFocused = false;
+      } else {
+        lastSpaceTime = now;
+      }
+      e.preventDefault();
+      break;
+    }
   }
 }
 

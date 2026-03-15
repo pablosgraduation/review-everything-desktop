@@ -69,6 +69,9 @@ let treeAutoHide = $state(false);
 let treeHoverEnabled = $state(false);
 let treeHovered = $state(false);
 
+// Highlight mode: 0 = syntax+emphasis, 1 = emphasis only, 2 = none
+let highlightMode = $state(0);
+
 // Compare
 let compareItems = $state<CompareItem[]>([]);
 let compareCursor = $state(0);
@@ -212,6 +215,9 @@ export const appState = {
   set treeHoverEnabled(v: boolean) { treeHoverEnabled = v; },
   get treeHovered() { return treeHovered; },
   set treeHovered(v: boolean) { treeHovered = v; },
+  get highlightMode() { return highlightMode; },
+  set highlightMode(v: number) { highlightMode = v; },
+
   get treeVisible(): boolean {
     if (showTree) return true;
     if (treeHoverEnabled && treeHovered) return true;
