@@ -667,6 +667,7 @@ fn run_parallel_diff(
                 .arg(&new_tmp)
                 .env("DFT_DISPLAY", "json")
                 .env("DFT_UNSTABLE", "yes")
+                .env("DFT_GRAPH_LIMIT", "30000000")
                 .output()
                 .map_err(|e| format!("{path_display}: difft failed to run: {e}"))?;
 
